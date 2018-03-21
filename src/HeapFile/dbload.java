@@ -45,7 +45,7 @@ public class dbload {
         	while ((line = buffFileRead.readLine()) != null) {
         		//Split the values in each line based on the delimiter
         		String[] lines = line.split(csvSplitBy);
-        		String newLine = null;
+        		String newLine = "";
         		for (int i = 0; i < lines.length; i++) {
         			if (lines[i].equals("")) {
                        	newLine += "NULL";
