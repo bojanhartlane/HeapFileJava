@@ -1,4 +1,4 @@
-package HeapFile;
+package heapfile;
 
 import java.io.BufferedReader;
 import java.io.FileNotFoundException;
@@ -20,10 +20,27 @@ public class dbload {
 		BufferedReader buffFileRead = null, fileName = null;
 		//String to contain value of each line in the .csv file
         String line = "";
+        String fileLocation = "";
         //Delimiter for the records. In this case, it's Tab or \t 
         String csvSplitBy = "\t";
         //Field names
         String[] fieldNames = null;
+        //Page size
+        int pageSize = 0;
+        
+        if (args.length == 3) {
+        	for (int i = 0; i < args.length; i++) {
+            	if (Character.digit(args[i].charAt(args[i].length() - 1), 10) < 0) {
+            		if (args[i].length() > 2) {
+            			fileLocation = args[i];
+            			System.out.println(fileLocation);
+            		}
+            	} else {
+            		pageSize = Integer.parseInt(args[i]);
+            		System.out.println(pageSize);
+            	}
+            }
+        }        
         
         try {
         	//Ask user for the file name
