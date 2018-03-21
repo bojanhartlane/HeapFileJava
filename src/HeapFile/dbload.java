@@ -13,7 +13,7 @@ import java.net.UnknownHostException;
  * will try to read each field value through delimiter and print it separately. 
  */
 
-public class HeapFileJava {
+public class dbload {
 	
 	public static void main(String[] args) throws IOException, SocketException, UnknownHostException {
         //BufferedReader to accept file name as input and to read the .csv file
