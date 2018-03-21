@@ -17,7 +17,7 @@ public class dbload {
 	
 	public static void main(String[] args) throws IOException, SocketException, UnknownHostException {
         //BufferedReader to accept file name as input and to read the .csv file
-		BufferedReader buffFileRead = null, fileName = null;
+		BufferedReader buffFileRead = null;
 		//String to contain value of each line in the .csv file
         String line = "";
         String fileLocation = "";
@@ -43,11 +43,7 @@ public class dbload {
         }        
         
         try {
-        	//Ask user for the file name
-        	System.out.print("Enter the file name: ");
-        	//Use input as file name and access the file with BufferedReader buffFileRead
-        	fileName = new BufferedReader(new InputStreamReader(System.in));
-        	buffFileRead = new BufferedReader(new FileReader(fileName.readLine()));
+        	buffFileRead = new BufferedReader(new FileReader(fileLocation));
         	//Read the first line, which is the field names
         	if ((line = buffFileRead.readLine()) != null) {
         		//Split the fields based on the delimiter
