@@ -1,12 +1,15 @@
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.ObjectOutputStream;
+import java.io.PrintWriter;
 import java.net.SocketException;
 import java.net.UnknownHostException;
 
@@ -33,6 +36,10 @@ public class dbload {
         String[] fieldNames = null;
         //Page size
         int pageSize = 0;
+       //Number of records
+        int numOfRecords = 0;
+        //Number of pages
+        int numOfPages = 1;
         //Remaining size
         int remainingSize = 0;
         //Record size
@@ -45,7 +52,9 @@ public class dbload {
         for (int i = 0; i < record.length; i++) {
     		recordSize += record[i].length;        	
         }
-        System.out.println("Record size: " + recordSize * 2);
+        //1 character is 2 bytes, so the actual record size is total characters * 2 bytes
+        recordSize *= 2;
+        System.out.println("Record size: " + recordSize);
         
         //Initialise the array again with placeholder. In this program, we use "Tab" character
         for (int i = 0; i < record.length; i++) {
@@ -54,6 +63,7 @@ public class dbload {
         	}
         }
         
+        //Check arguments for page size and file location
         if (args.length == 3) {
         	for (int i = 0; i < args.length; i++) {
             	if (Character.digit(args[i].charAt(args[i].length() - 1), 10) < 0) {
@@ -75,18 +85,7 @@ public class dbload {
         saveFile.createNewFile();
         //Prepare DataOutputStream for write process
         DataOutputStream os = new DataOutputStream(new FileOutputStream(saveFile));
-        
-        //Read each row of .csv file
-        for (int i = 0; i < record.length; i++) {
-        	String valueToWrite = "";
-        	for (int j = 0; j < record[i].length; j++) {
-        		valueToWrite += record[i][j];
-        	}
-    		os.writeChars(valueToWrite);
-    		System.out.println("Output stream size: " + os.size() + " bytes");
-        }
-        os.close();
-        
+                
         
         try {
         	//Read the input file
@@ -99,27 +98,68 @@ public class dbload {
         	
         	//Read until the file reaches last line
         	while ((line = buffFileRead.readLine()) != null) {
+        		//Add total number of records
+        		numOfRecords++;
+        		//If remaining size is smaller than record size,
+        		//then run this method
+        		if ((remainingSize - recordSize) < 0) {
+        			String filler = "";
+        			for (int i = 0; i < (remainingSize / 2); i++) {
+        				//Gaps at the end of the page
+        				filler += "\t";
+        			}
+        			//Write gaps at the end of the page
+        			os.writeChars(filler);
+        			//Add new page
+        			numOfPages++;
+        			System.out.println("Page number: " + numOfPages);
+        			//Reset remaining size to page size for the next page
+        			remainingSize = pageSize;
+        		}
         		//Split the values in each line based on the delimiter
         		String[] lines = line.split(csvSplitBy);     		
         		for (int i = 0; i < lines.length; i++) {
         			//Add each value to the appropriate field by inserting one char at a time
         			for (int j = 0; j < lines[i].length(); j++) {
         				record[i][j] = lines[i].charAt(j);
-        			}
-        			for (int j = 0; j < record[i].length; j++) {
-        				System.out.print(record[i][j]);
-        			}
-        			System.out.println();
-        			//Initialise the array again with placeholder
-    	        	for (int j = 0; j < record[i].length; j++) {
-    	        		record[i][j] = '\t';
-    	        	}
-        	        
+        			}        	        
         		}
-        		if (lines.length < fieldNames.length) {
-        			System.out.println("NULL");
-    			}
+        		for (int i = 0; i < record.length; i++) {
+        			//String to contain characters to be written
+	        		String valueToWrite = "";
+	        		for (int j = 0; j < record[i].length; j++) {
+	        			//Add character to valueToWrite to be written to the file
+	    				valueToWrite += record[i][j];
+	    				//System.out.print(record[i][j]);
+	    				//Initialise the array again with placeholder    	        	
+		        		record[i][j] = '\t';
+	    			}
+	    			//System.out.println();
+	    			//Write value to the page
+	    			os.writeChars(valueToWrite);
+	    			//Print buffer size
+	    			//System.out.println("Output stream size: " + os.size() + " bytes"); 	        	
+        		}
+        		//Subtract remaining size with this record's size
+    			remainingSize -= recordSize;
+    			//System.out.println("Remaining size: " + remainingSize);   
         	}
+        	os.close();
+        	
+        	//File for statistics
+            File statFile = new File("stdout");
+            //Create the file if it doesn't exist
+            saveFile.createNewFile();
+            //Prepare DataOutputStream for write process
+            BufferedWriter buffStatFile = new BufferedWriter(new FileWriter(statFile));
+            PrintWriter printStatFile = new PrintWriter(buffStatFile);
+            //Print statistics to the file
+            printStatFile.println("Total records: " + numOfRecords);
+            printStatFile.println("Total pages: " + numOfPages);
+            //Close the stream
+            printStatFile.close();
+            buffStatFile.close();
+            
         	
     	 } catch (FileNotFoundException e) {
     		 e.printStackTrace();
