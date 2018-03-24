@@ -1,5 +1,8 @@
 import java.io.BufferedReader;
+import java.io.DataOutputStream;
+import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -44,6 +47,13 @@ public class dbload {
         }
         System.out.println("Record size: " + recordSize * 2);
         
+        //Initialise the array again with placeholder. In this program, we use "Tab" character
+        for (int i = 0; i < record.length; i++) {
+        	for (int j = 0; j < record[i].length; j++) {        		
+        		record[i][j] = '\t';
+        	}
+        }
+        
         if (args.length == 3) {
         	for (int i = 0; i < args.length; i++) {
             	if (Character.digit(args[i].charAt(args[i].length() - 1), 10) < 0) {
@@ -59,37 +69,62 @@ public class dbload {
             }
         }
         
+        //File to be written
+        File saveFile = new File("heap." + String.valueOf(pageSize));
+        //Create the file if it doesn't exist
+        saveFile.createNewFile();
+        //Prepare DataOutputStream for write process
+        DataOutputStream os = new DataOutputStream(new FileOutputStream(saveFile));
+        
+        //Read each row of .csv file
+        for (int i = 0; i < record.length; i++) {
+        	String valueToWrite = "";
+        	for (int j = 0; j < record[i].length; j++) {
+        		valueToWrite += record[i][j];
+        	}
+    		os.writeChars(valueToWrite);
+    		System.out.println("Output stream size: " + os.size() + " bytes");
+        }
+        os.close();
+        
+        
         try {
+        	//Read the input file
         	buffFileRead = new BufferedReader(new FileReader(fileLocation));
         	//Read the first line, which is the field names
         	if ((line = buffFileRead.readLine()) != null) {
         		//Split the fields based on the delimiter
         		fieldNames = line.split(csvSplitBy);
         	}
-        	//Print the field names
-        	for (int i = 0; i < fieldNames.length; i++)  {
-        		System.out.println(fieldNames[i] + " length: " + fieldNames[i].length());
-        	}
         	
         	//Read until the file reaches last line
         	while ((line = buffFileRead.readLine()) != null) {
         		//Split the values in each line based on the delimiter
-        		String[] lines = line.split(csvSplitBy);        		
+        		String[] lines = line.split(csvSplitBy);     		
         		for (int i = 0; i < lines.length; i++) {
-        			if (lines[i].equals("")) {
-                       	System.out.println("NULL");
-                   	} else {
-                   		System.out.println(lines[i]);
-                   	}                
+        			//Add each value to the appropriate field by inserting one char at a time
+        			for (int j = 0; j < lines[i].length(); j++) {
+        				record[i][j] = lines[i].charAt(j);
+        			}
+        			for (int j = 0; j < record[i].length; j++) {
+        				System.out.print(record[i][j]);
+        			}
+        			System.out.println();
+        			//Initialise the array again with placeholder
+    	        	for (int j = 0; j < record[i].length; j++) {
+    	        		record[i][j] = '\t';
+    	        	}
+        	        
         		}
         		if (lines.length < fieldNames.length) {
         			System.out.println("NULL");
-    			} 
+    			}
         	}
         	
     	 } catch (FileNotFoundException e) {
     		 e.printStackTrace();
     	 }
+         
         
 	}
 	
