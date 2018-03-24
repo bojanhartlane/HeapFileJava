@@ -54,7 +54,8 @@ public class dbload {
         }
         //1 character is 2 bytes, so the actual record size is total characters * 2 bytes
         recordSize *= 2;
-        System.out.println("Record size: " + recordSize);
+        //Print one record's size
+        System.out.println("One record's size: " + recordSize);
         
         //Initialise the array again with placeholder. In this program, we use "Tab" character
         for (int i = 0; i < record.length; i++) {
@@ -95,7 +96,8 @@ public class dbload {
         		//Split the fields based on the delimiter
         		fieldNames = line.split(csvSplitBy);
         	}
-        	
+        	//System time when the operation starts
+        	long startOperation = System.currentTimeMillis();
         	//Read until the file reaches last line
         	while ((line = buffFileRead.readLine()) != null) {
         		//Add total number of records
@@ -146,6 +148,9 @@ public class dbload {
         	}
         	os.close();
         	
+        	long endOperation = System.currentTimeMillis();
+        	long operationTime = endOperation - startOperation;
+        	
         	//File for statistics
             File statFile = new File("stdout");
             //Create the file if it doesn't exist
@@ -156,6 +161,7 @@ public class dbload {
             //Print statistics to the file
             printStatFile.println("Total records: " + numOfRecords);
             printStatFile.println("Total pages: " + numOfPages);
+            printStatFile.println("Total operation time: " + operationTime + " milliseconds");
             //Close the stream
             printStatFile.close();
             buffStatFile.close();
