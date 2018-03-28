@@ -7,8 +7,6 @@ import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.ObjectOutputStream;
 import java.io.PrintWriter;
 import java.net.SocketException;
 import java.net.UnknownHostException;
@@ -132,23 +130,19 @@ public class dbload {
 	        		for (int j = 0; j < record[i].length; j++) {
 	        			//Add character to valueToWrite to be written to the file
 	    				valueToWrite += record[i][j];
-	    				//System.out.print(record[i][j]);
 	    				//Initialise the array again with placeholder    	        	
 		        		record[i][j] = '\t';
 	    			}
-	    			//System.out.println();
 	    			//Write value to the page
-	    			os.writeChars(valueToWrite);
-	    			//Print buffer size
-	    			//System.out.println("Output stream size: " + os.size() + " bytes"); 	        	
+	    			os.writeChars(valueToWrite);        	
         		}
         		//Subtract remaining size with this record's size
-    			remainingSize -= recordSize;
-    			//System.out.println("Remaining size: " + remainingSize);   
+    			remainingSize -= recordSize;   
         	}
         	os.close();
-        	
+        	//System time when the operation starts
         	long endOperation = System.currentTimeMillis();
+        	//Total operation time
         	long operationTime = endOperation - startOperation;
         	
         	//File for statistics
@@ -169,8 +163,7 @@ public class dbload {
         	
     	 } catch (FileNotFoundException e) {
     		 e.printStackTrace();
-    	 }
-         
+    	 }         
         
 	}
 	
