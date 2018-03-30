@@ -34,7 +34,7 @@ public class dbload {
         String[] fieldNames = null;
         //Page size
         int pageSize = 0;
-       //Number of records
+        //Number of records
         int numOfRecords = 0;
         //Number of pages
         int numOfPages = 1;
@@ -145,10 +145,22 @@ public class dbload {
         	//Total operation time
         	long operationTime = endOperation - startOperation;
         	
+        	//File to keep number of pages
+        	File recFile = new File("pages");
+        	//Create the file if it doesn't exist
+            recFile.createNewFile();
+            //Write the number of pages to "pages" file
+            BufferedWriter buffRecFile = new BufferedWriter(new FileWriter(recFile));
+            PrintWriter printRecFile = new PrintWriter(buffRecFile);
+            printRecFile.println(numOfPages);
+            //Close the PrintWriter and BufferedWriter streams
+            printRecFile.close();
+            buffRecFile.close();
+        	
         	//File for statistics
             File statFile = new File("stdout");
             //Create the file if it doesn't exist
-            saveFile.createNewFile();
+            statFile.createNewFile();
             //Prepare DataOutputStream for write process
             BufferedWriter buffStatFile = new BufferedWriter(new FileWriter(statFile));
             PrintWriter printStatFile = new PrintWriter(buffStatFile);
