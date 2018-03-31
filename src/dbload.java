@@ -13,7 +13,7 @@ import java.net.UnknownHostException;
 
 /*
  * This is a Java program to implement heap file. The pages are specifically designed for
- * the ABN database and this program implements fixed-length records. This means that, for example,
+ * the ASIC database and this program implements fixed-length records. This means that, for example,
  * a field with maximum length of 200 will have 200 characters for every entry in the memory,
  * even though the actual value is less than 200 characters. The rest will be filled with
  * substitute characters.
@@ -77,105 +77,118 @@ public class dbload {
             	}
             }
         }
-        
-        //File to be written
-        File saveFile = new File("heap." + String.valueOf(pageSize));
-        //Create the file if it doesn't exist
-        saveFile.createNewFile();
-        //Prepare DataOutputStream for write process
-        DataOutputStream os = new DataOutputStream(new FileOutputStream(saveFile));
-                
-        
-        try {
-        	//Read the input file
-        	buffFileRead = new BufferedReader(new FileReader(fileLocation));
-        	//Read the first line, which is the field names
-        	if ((line = buffFileRead.readLine()) != null) {
-        		//Split the fields based on the delimiter
-        		fieldNames = line.split(csvSplitBy);
-        	}
-        	//System time when the operation starts
-        	long startOperation = System.currentTimeMillis();
-        	//Read until the file reaches last line
-        	while ((line = buffFileRead.readLine()) != null) {
-        		//Add total number of records
-        		numOfRecords++;
-        		//If remaining size is smaller than record size,
-        		//then run this method
-        		if ((remainingSize - recordSize) < 0) {
-        			String filler = "";
+        //If page size is larger than the record size, then the program can run
+        if (pageSize >= 578) {
+	        //File to be written
+	        File saveFile = new File("heap." + String.valueOf(pageSize));
+	        //Create the file if it doesn't exist
+	        saveFile.createNewFile();
+	        //Prepare DataOutputStream for write process
+	        DataOutputStream os = new DataOutputStream(new FileOutputStream(saveFile));
+	               	        
+	        try {
+	        	//Read the input file
+	        	buffFileRead = new BufferedReader(new FileReader(fileLocation));
+	        	//Read the first line, which is the field names
+	        	if ((line = buffFileRead.readLine()) != null) {
+	        		//Split the fields based on the delimiter
+	        		fieldNames = line.split(csvSplitBy);
+	        	}
+	        	//System time when the operation starts
+	        	long startOperation = System.currentTimeMillis();
+	        	//Read until the file reaches last line
+	        	while ((line = buffFileRead.readLine()) != null) {
+	        		//Add total number of records
+	        		numOfRecords++;
+	        		//If remaining size is smaller than record size,
+	        		//then run this method
+	        		if ((remainingSize - recordSize) < 0) {
+	        			String filler = "";
+	        			for (int i = 0; i < (remainingSize / 2); i++) {
+	        				//Gaps at the end of the page
+	        				filler += "\t";
+	        			}
+	        			//Write gaps at the end of the page
+	        			os.writeChars(filler);
+	        			//Add new page
+	        			numOfPages++;
+	        			System.out.println("Page number: " + numOfPages);
+	        			//Reset remaining size to page size for the next page
+	        			remainingSize = pageSize;
+	        		}
+	        		//Split the values in each line based on the delimiter
+	        		String[] lines = line.split(csvSplitBy);     		
+	        		for (int i = 0; i < lines.length; i++) {
+	        			//Add each value to the appropriate field by inserting one char at a time
+	        			for (int j = 0; j < lines[i].length(); j++) {
+	        				record[i][j] = lines[i].charAt(j);
+	        			}        	        
+	        		}
+	        		for (int i = 0; i < record.length; i++) {
+	        			//String to contain characters to be written
+		        		String valueToWrite = "";
+		        		for (int j = 0; j < record[i].length; j++) {
+		        			//Add character to valueToWrite to be written to the file
+		    				valueToWrite += record[i][j];
+		    				//Initialise the array again with placeholder    	        	
+			        		record[i][j] = '\t';
+		    			}
+		    			//Write value to the page
+		    			os.writeChars(valueToWrite);        	
+	        		}
+	        		//Subtract remaining size with this record's size
+	    			remainingSize -= recordSize;   
+	        	}
+	        	if (remainingSize > 0) {
+	        		String filler = "";
         			for (int i = 0; i < (remainingSize / 2); i++) {
         				//Gaps at the end of the page
         				filler += "\t";
         			}
         			//Write gaps at the end of the page
         			os.writeChars(filler);
-        			//Add new page
-        			numOfPages++;
-        			System.out.println("Page number: " + numOfPages);
-        			//Reset remaining size to page size for the next page
-        			remainingSize = pageSize;
-        		}
-        		//Split the values in each line based on the delimiter
-        		String[] lines = line.split(csvSplitBy);     		
-        		for (int i = 0; i < lines.length; i++) {
-        			//Add each value to the appropriate field by inserting one char at a time
-        			for (int j = 0; j < lines[i].length(); j++) {
-        				record[i][j] = lines[i].charAt(j);
-        			}        	        
-        		}
-        		for (int i = 0; i < record.length; i++) {
-        			//String to contain characters to be written
-	        		String valueToWrite = "";
-	        		for (int j = 0; j < record[i].length; j++) {
-	        			//Add character to valueToWrite to be written to the file
-	    				valueToWrite += record[i][j];
-	    				//Initialise the array again with placeholder    	        	
-		        		record[i][j] = '\t';
-	    			}
-	    			//Write value to the page
-	    			os.writeChars(valueToWrite);        	
-        		}
-        		//Subtract remaining size with this record's size
-    			remainingSize -= recordSize;   
-        	}
-        	os.close();
-        	//System time when the operation starts
-        	long endOperation = System.currentTimeMillis();
-        	//Total operation time
-        	long operationTime = endOperation - startOperation;
-        	
-        	//File to keep number of pages
-        	File recFile = new File("pages");
-        	//Create the file if it doesn't exist
-            recFile.createNewFile();
-            //Write the number of pages to "pages" file
-            BufferedWriter buffRecFile = new BufferedWriter(new FileWriter(recFile));
-            PrintWriter printRecFile = new PrintWriter(buffRecFile);
-            printRecFile.println(numOfPages);
-            //Close the PrintWriter and BufferedWriter streams
-            printRecFile.close();
-            buffRecFile.close();
-        	
-        	//File for statistics
-            File statFile = new File("stdout");
-            //Create the file if it doesn't exist
-            statFile.createNewFile();
-            //Prepare DataOutputStream for write process
-            BufferedWriter buffStatFile = new BufferedWriter(new FileWriter(statFile));
-            PrintWriter printStatFile = new PrintWriter(buffStatFile);
-            //Print statistics to the file
-            printStatFile.println("Total records: " + numOfRecords);
-            printStatFile.println("Total pages: " + numOfPages);
-            printStatFile.println("Total operation time: " + operationTime + " milliseconds");
-            //Close the stream
-            printStatFile.close();
-            buffStatFile.close();
-            
-        	
-    	 } catch (FileNotFoundException e) {
-    		 e.printStackTrace();
-    	 }         
+	        	}
+	        	
+	        	os.close();
+	        	//System time when the operation starts
+	        	long endOperation = System.currentTimeMillis();
+	        	//Total operation time
+	        	long operationTime = endOperation - startOperation;
+	        	
+	        	//File to keep number of pages
+	        	File recFile = new File("pages." + pageSize);
+	        	//Create the file if it doesn't exist
+	            recFile.createNewFile();
+	            //Write the number of pages to "pages" file
+	            BufferedWriter buffRecFile = new BufferedWriter(new FileWriter(recFile));
+	            PrintWriter printRecFile = new PrintWriter(buffRecFile);
+	            printRecFile.println(numOfPages);
+	            //Close the PrintWriter and BufferedWriter streams
+	            printRecFile.close();
+	            buffRecFile.close();
+	        	
+	        	//File for statistics
+	            File statFile = new File("stdout");
+	            //Create the file if it doesn't exist
+	            statFile.createNewFile();
+	            //Prepare DataOutputStream for write process
+	            BufferedWriter buffStatFile = new BufferedWriter(new FileWriter(statFile));
+	            PrintWriter printStatFile = new PrintWriter(buffStatFile);
+	            //Print statistics to the file
+	            printStatFile.println("Total records: " + numOfRecords);
+	            printStatFile.println("Total pages: " + numOfPages);
+	            printStatFile.println("Total operation time: " + operationTime + " milliseconds");
+	            //Close the stream
+	            printStatFile.close();
+	            buffStatFile.close();
+	            
+	        	
+	    	 } catch (FileNotFoundException e) {
+	    		 e.printStackTrace();
+	    	 }     
+         } else {
+        	 System.out.println("The page size must be bigger than 578 bytes");
+         }
         
 	}
 	
